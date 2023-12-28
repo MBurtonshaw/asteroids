@@ -1,11 +1,13 @@
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
+//setting canvas to fit the screen & making background color black
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 c.fillStyle = 'black';
 c.fillRect(0, 0, canvas.width, canvas.height);
 
+//Player class
 class Player {
     constructor({ position, velocity }) {
         this.position = position;
@@ -13,12 +15,16 @@ class Player {
         this.rotation = 0;
     }
 
+    //function that creates the spaceship and sets its movement
     draw() {
         c.save();
 
+        //allows the spaceship to rotate
         c.translate(this.position.x, this.position.y);
         c.rotate(this.rotation);
         c.translate(-this.position.x, -this.position.y);
+
+        //defining spaceship appearance
         c.beginPath();
         c.moveTo(this.position.x + 30, this.position.y);
         c.lineTo(this.position.x - 10, this.position.y - 10);
@@ -30,6 +36,7 @@ class Player {
         c.restore();
     }
 
+    //function that allows for forward movement and keeps the background a constant color
     update() {
         this.draw();
         this.position.x += this.velocity.x;
@@ -37,6 +44,7 @@ class Player {
     }
 }
 
+//defining player 1
 const player = new Player({ 
     position: {x: canvas.width/2, y: canvas.height/2},
     velocity: {x:0, y:0}
@@ -44,6 +52,7 @@ const player = new Player({
 
  player.draw();
 
+ //defining keys for movement
  const keys = {
     w: {
         pressed: false
@@ -56,16 +65,21 @@ const player = new Player({
     }
  };
 
+ //defining movement constants
  const SPEED = 4;
  const ROTATIONAL_SPEED = 0.06;
  const FRICTION = .97;
 
+ //functional loop to create animation
  function animate() {
     window.requestAnimationFrame(animate);
+    //by placing fillStyle and player.update() in this order, the background remains constant
+    //and the spaceship remains visible without repeating
     c.fillStyle = 'black';
     c.fillRect(0, 0, canvas.width, canvas.height);
     player.update();
 
+    //conditional functions determining spaceship rotation and friction based on velocity
     if (keys.w.pressed) {
         player.velocity.x = Math.cos(player.rotation) * SPEED;
         player.velocity.y = Math.sin(player.rotation) * SPEED;
@@ -79,8 +93,11 @@ const player = new Player({
         player.rotation -= ROTATIONAL_SPEED;
     };
  }
+
+ //starts the animation loop
  animate();
  
+ //event listeners for spaceship movement
 window.addEventListener('keydown', (e) => {
     switch (e.code) {
         case 'KeyW':
