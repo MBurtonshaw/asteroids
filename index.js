@@ -6,7 +6,14 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 c.fillStyle = 'black';
 c.fillRect(0, 0, canvas.width, canvas.height);
-
+window.alert(`
+    Hello!
+    How to play:
+    W-                  move spaceship forward
+    A-                   rotate spaceship left
+    D-                   rotate spaceship right
+    Backspace-     fire projectile
+`);
 ///////////////////////////////////////////////////////////////////////
 class Player {
     constructor({ position, velocity }) {
@@ -308,6 +315,7 @@ const player = new Player({
             console.log('GAME OVER');
             window.cancelAnimationFrame(animationId);
             window.clearInterval(intervalId);
+            window.alert('GAME OVER');
         }
 
         if (asteroid.position.x + asteroid.radius < 0 ||
