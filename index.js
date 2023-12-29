@@ -81,6 +81,35 @@ class Projectile {
 }
 ///////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////
+class Asteroid {
+    constructor({ position, velocity, radius }) {
+        this.position = position;
+        this.velocity = velocity;
+        this.radius = radius;
+    }
+
+    draw() {
+        //beginPath and closePath further down ensure the animations don't bleed into each other
+        c.beginPath();
+        //defining a circle
+        c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
+        //^see beginPath comment
+        c.closePath();
+
+        c.strokeStyle = 'white';
+        //creates circle
+        c.stroke();
+    }
+
+    update() {
+        //calling the draw() function
+        this.draw();
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    };
+}
+///////////////////////////////////////////////////////////////////////
 //defining player 1
 const player = new Player({ 
     position: {x: canvas.width/2, y: canvas.height/2},
@@ -114,6 +143,57 @@ const player = new Player({
  const PROJECTILE_SPEED = 3;
 
  const projectiles = [];
+ const asteroids = [];
+
+ window.setInterval(() => {
+
+    const index = Math.floor(Math.random() * 4);
+    let x, y;
+    let vx, vy;
+    let radius = 50 * Math.random() + 10;
+
+    switch (index) {
+        case 0: //left
+            x = 0 - radius;
+            y = Math.random() * canvas.height;
+            vx = 1;
+            vy = 0;
+            break
+        case 1: //bottom
+            x = Math.random() * canvas.width;
+            y = canvas.height + radius;
+            vx = 0;
+            vy = -1;
+            break
+        case 2: //right
+            x = canvas.width + radius;
+            y = Math.random() * canvas.height;
+            vx = -1;
+            vy = 0;
+            break
+        case 4: //top
+            x = Math.random() * canvas.width;
+            y = 0 - radius;
+            vx = 0;
+            vy = 1;
+            break
+    }
+
+    asteroids.push(new Asteroid({
+        position: {
+            x: x,
+            y: y
+        },
+        velocity: {
+            x: vx,
+            y: vy
+        },
+        radius
+    })
+    );
+
+    console.log(asteroids);
+ }, 3000);
 
  //functional loop to create animation
  function animate() {
@@ -140,6 +220,23 @@ const player = new Player({
             ) {
             projectiles.splice(i, 1);
         }
+    }
+
+    for (let i = asteroids.length -1; i >= 0; i--) {
+        const asteroid = asteroids[i];
+        asteroid.update();
+
+        if (asteroid.position.x + asteroid.radius < 0 ||
+            //to the right
+            asteroid.position.x - asteroid.radius > canvas.width ||
+            //up top
+            asteroid.position.y + asteroid.radius > canvas.height ||
+            //below
+            asteroid.position.y + asteroid.radius < 0
+        ) {
+            asteroids.splice(i, 1);
+        }
+     
     }
 
     //conditional functions determining spaceship rotation and friction based on velocity
