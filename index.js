@@ -7,7 +7,7 @@ canvas.height = window.innerHeight;
 c.fillStyle = 'black';
 c.fillRect(0, 0, canvas.width, canvas.height);
 
-//Player class
+///////////////////////////////////////////////////////////////////////
 class Player {
     constructor({ position, velocity }) {
         this.position = position;
@@ -24,12 +24,18 @@ class Player {
         c.rotate(this.rotation);
         c.translate(-this.position.x, -this.position.y);
 
-        //defining spaceship appearance
+        //beginPath and closePath further down ensure the animations don't bleed into each other
         c.beginPath();
+
+        //defining spaceship appearance as a triangle
         c.moveTo(this.position.x + 30, this.position.y);
         c.lineTo(this.position.x - 10, this.position.y - 10);
         c.lineTo(this.position.x - 10, this.position.y + 10);
+
+        //^see beginPath comment
         c.closePath();
+
+        //defining the triangle as being made of white lines
         c.strokeStyle = 'white';
         c.stroke();
 
@@ -43,6 +49,37 @@ class Player {
         this.position.y += this.velocity.y;
     }
 }
+///////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////
+class Projectile {
+    constructor({ position, velocity }) {
+        this.position = position;
+        this.velocity = velocity;
+        this.radius = 5;
+    }
+
+    draw() {
+        //beginPath and closePath further down ensure the animations don't bleed into each other
+        c.beginPath();
+        //defining a circle
+        c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
+        //^see beginPath comment
+        c.closePath();
+
+        c.fillStyle = 'white';
+        //creates circle
+        c.fill();
+    }
+
+    update() {
+        //calling the draw() function
+        this.draw();
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    };
+}
+///////////////////////////////////////////////////////////////////////
 
 //defining player 1
 const player = new Player({ 
@@ -62,22 +99,48 @@ const player = new Player({
     },
     d: {
         pressed: false
+    },
+    /*
+    s: {
+        pressed: false
     }
+    */
  };
 
  //defining movement constants
- const SPEED = 4;
+ const SPEED = 2.5;
  const ROTATIONAL_SPEED = 0.06;
  const FRICTION = .97;
+ const PROJECTILE_SPEED = 3;
+
+ const projectiles = [];
 
  //functional loop to create animation
  function animate() {
     window.requestAnimationFrame(animate);
-    //by placing fillStyle and player.update() in this order, the background remains constant
-    //and the spaceship remains visible without repeating
+    //by placing fillStyle and player.update() in this order, the background remains constant and the spaceship remains visible without repeating
     c.fillStyle = 'black';
     c.fillRect(0, 0, canvas.width, canvas.height);
     player.update();
+
+    //loop is setup w the -1 and the i-- so as to start at the back of the array and move to the front
+    for (let i = projectiles.length -1; i >= 0; i--) {
+        const projectile = projectiles[i];
+        projectile.update();
+
+        //removing projectiles that went off screen
+        //to the left
+        if (projectile.position.x + projectile.radius < 0 ||
+            //to the right
+                projectile.position.x - projectile.radius > canvas.width ||
+                //up top
+                projectile.position.y + projectile.radius > canvas.height ||
+                //below
+                projectile.position.y + projectile.radius < 0
+            ) {
+            projectiles.splice(i, 1);
+        }
+    }
 
     //conditional functions determining spaceship rotation and friction based on velocity
     if (keys.w.pressed) {
@@ -87,6 +150,15 @@ const player = new Player({
         player.velocity.x *= FRICTION;
         player.velocity.y *= FRICTION;
     }
+    /*
+    if (keys.s.pressed) {
+        player.velocity.x = (Math.cos(player.rotation) * -1)  * (SPEED/2);
+        player.velocity.y = (Math.sin(player.rotation) * -1) * (SPEED/2);
+    } else if (!keys.s.pressed) {
+        player.velocity.x *= FRICTION;
+        player.velocity.y *= FRICTION;
+    }
+    */
     if (keys.a.pressed) {
         player.rotation += ROTATIONAL_SPEED;
     } else if (keys.d.pressed) {
@@ -109,6 +181,24 @@ window.addEventListener('keydown', (e) => {
         case 'KeyD':
             keys.d.pressed = true;
             break
+            /*
+        case 'KeyS':
+            keys.s.pressed = true;
+            break
+            */
+        case 'Backspace':
+            projectiles.push( new Projectile({
+                position: {
+                    x: player.position.x + Math.cos(player.rotation) * 30,
+                    y: player.position.y + Math.sin(player.rotation) * 30
+                },
+                velocity: {
+                    x: Math.cos(player.rotation) * PROJECTILE_SPEED,
+                    y: Math.sin(player.rotation) * PROJECTILE_SPEED
+                }
+            }));
+
+        break
     }
 });
 
@@ -123,5 +213,10 @@ window.addEventListener('keyup', (e) => {
         case 'KeyD':
             keys.d.pressed = false;
             break
+            /*
+        case 'KeyS':
+                keys.s.pressed = false;
+                break
+                */
     }
 });
